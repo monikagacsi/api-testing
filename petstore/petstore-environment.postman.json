@@ -1,0 +1,11 @@
+{
+  "id": "petstore-public-env",
+  "name": "Petstore - Public",
+  "values": [
+    { "key": "baseUrl", "value": "https://petstore.swagger.io/v2", "type": "default", "enabled": true },
+    { "key": "api_key", "value": "special-key", "type": "default", "enabled": true },
+    { "key": "username", "value": "qa_user", "type": "default", "enabled": true },
+    { "key": "password", "value": "qa_pass_123", "type": "default", "enabled": true }
+  ],
+  "_postman_variable_scope": "environment"
+}

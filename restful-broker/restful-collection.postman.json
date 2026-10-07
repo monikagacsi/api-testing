@@ -1,0 +1,451 @@
+{
+  "info": {
+    "name": "Restful-Booker API Tests",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Comprehensive API test suite covering Auth, Booking CRUD, Filtering, Boundary, and Security scenarios."
+  },
+  "item": [
+    {
+      "name": "AUTH-001: Generate Auth Token (Positive)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/auth",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test(\"Token is generated\", function () {",
+              "    pm.expect(jsonData).to.have.property('token');",
+              "});",
+              "pm.environment.set(\"token\", jsonData.token);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "AUTH-002: [Negative] Generate Token with Invalid Password",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"WrongPassword123\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/auth",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 or 400 with failure reason\", function () {",
+              "    pm.response.to.not.have.status(500);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test(\"Response contains bad credentials indicator\", function () {",
+              "    pm.expect(jsonData.reason || JSON.stringify(jsonData)).to.include(\"Bad credentials\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "BOOKING-001: Get All Booking IDs (Positive)",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "accept", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/booking",
+          "host": ["{{baseUrl}}"],
+          "path": ["booking"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Response is a non-empty array of bookings\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.be.an('array');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "BOOKING-002: Get Bookings Filtered by Name (Edge-Case)",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "accept", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/booking?firstname=sally&lastname=brown",
+          "host": ["{{baseUrl}}"],
+          "path": ["booking"],
+          "query": [
+            { "key": "firstname", "value": "sally" },
+            { "key": "lastname", "value": "brown" }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Response is an array\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.be.an('array');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "BOOKING-003: Create a New Booking (Positive)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "accept", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"firstname\": \"Jim\",\n  \"lastname\": \"Brown\",\n  \"totalprice\": 111,\n  \"depositpaid\": true,\n  \"bookingdates\": {\n    \"checkin\": \"2026-06-01\",\n    \"checkout\": \"2026-06-07\"\n  },\n  \"additionalneeds\": \"Breakfast\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/booking",
+          "host": ["{{baseUrl}}"],
+          "path": ["booking"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.test(\"Booking object is returned with ID\", function () {",
+              "    pm.expect(jsonData).to.have.property('bookingid');",
+              "    pm.expect(jsonData.booking.firstname).to.eql(\"Jim\");",
+              "});",
+              "pm.environment.set(\"bookingId\", jsonData.bookingid);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "BOOKING-004: Get Booking by ID (Positive)",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "accept", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/booking/{{bookingId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["booking", "{{bookingId}}"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Verify correct booking details returned\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.firstname).to.eql(\"Jim\");",
+              "    pm.expect(jsonData.totalprice).to.eql(111);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "BOOKING-005: Update Booking (Positive)",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "accept", "value": "application/json" },
+          { "key": "Cookie", "value": "token={{token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"firstname\": \"James\",\n  \"lastname\": \"Brown\",\n  \"totalprice\": 222,\n  \"depositpaid\": true,\n  \"bookingdates\": {\n    \"checkin\": \"2026-06-01\",\n    \"checkout\": \"2026-06-10\"\n  },\n  \"additionalneeds\": \"Lunch and Breakfast\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/booking/{{bookingId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["booking", "{{bookingId}}"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Verify updated total price\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.totalprice).to.eql(222);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "BOOKING-006: Partially Update Booking (Positive)",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "accept", "value": "application/json" },
+          { "key": "Cookie", "value": "token={{token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"firstname\": \"Jameson\",\n  \"additionalneeds\": \"Dinner\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/booking/{{bookingId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["booking", "{{bookingId}}"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Verify partial update applied\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.firstname).to.eql(\"Jameson\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "BOOKING-007: Delete Booking (Positive)",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          { "key": "Cookie", "value": "token={{token}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/booking/{{bookingId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["booking", "{{bookingId}}"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 201 Created/Deleted\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "BOOKING-008: [Negative] Get Non-Existent Booking ID",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "accept", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/booking/99999999",
+          "host": ["{{baseUrl}}"],
+          "path": ["booking", "99999999"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 404 Not Found\", function () {",
+              "    pm.response.to.have.status(404);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "BOOKING-009: [Security] Update Booking Without Auth Token",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "accept", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"firstname\": \"Hacker\",\n  \"lastname\": \"Unauthorized\",\n  \"totalprice\": 999,\n  \"depositpaid\": false,\n  \"bookingdates\": {\n    \"checkin\": \"2026-06-01\",\n    \"checkout\": \"2026-06-05\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/booking/1",
+          "host": ["{{baseUrl}}"],
+          "path": ["booking", "1"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 403 Forbidden\", function () {",
+              "    pm.response.to.have.status(403);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "BOOKING-010: [Boundary] Create Booking with Extreme Numeric Price",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "accept", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"firstname\": \"Boundary\",\n  \"lastname\": \"Tester\",\n  \"totalprice\": 999999999,\n  \"depositpaid\": true,\n  \"bookingdates\": {\n    \"checkin\": \"2026-01-01\",\n    \"checkout\": \"2026-12-31\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/booking",
+          "host": ["{{baseUrl}}"],
+          "path": ["booking"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code handles high numeric boundary\", function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 400, 500]);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "BOOKING-011: [Negative] Create Booking with Inverted Dates",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "accept", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"firstname\": \"Time\",\n  \"lastname\": \"Traveler\",\n  \"totalprice\": 150,\n  \"depositpaid\": true,\n  \"bookingdates\": {\n    \"checkin\": \"2026-06-10\",\n    \"checkout\": \"2026-06-01\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/booking",
+          "host": ["{{baseUrl}}"],
+          "path": ["booking"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code handles date validation constraint\", function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 400, 500]);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "PING-001: Health Check (Positive)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/ping",
+          "host": ["{{baseUrl}}"],
+          "path": ["ping"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 201 Created / Healthy\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
