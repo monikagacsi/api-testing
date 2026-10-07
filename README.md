@@ -1,4 +1,4 @@
-# API Testing Portfolio
+# API Testing Project 
 
 ## Overview
 This repository contains two API testing portfolio projects built to demonstrate automated API testing skills using Postman, Newman, and structured quality assurance methodologies.
@@ -9,7 +9,7 @@ Each project includes a complete collection, environment configuration, test des
 
 ## Project Structure
 
-api-testing/
+```api-testing/
 ├── README.md
 ├── test-strategy.md
 ├── petstore/
@@ -22,7 +22,7 @@ api-testing/
     ├── restful-environment.postman.json
     ├── restful-test-design.md
     └── restful-test-report.md
-
+```
 ---
 
 ## Projects Included
@@ -49,7 +49,7 @@ api-testing/
 
 ## Tech Stack
 * Testing Tool: Postman (Collection v2.1.0)
-* Assertions: Chai assertion library (pm.test(), pm.expect()) via Postman test scripts
+* Assertions: Chai assertion library (`pm.test()`, `pm.expect()`) via Postman test scripts
 * CLI / Runner: Newman (for command-line and CI/CD execution)
 
 ---
@@ -64,16 +64,20 @@ You can run these tests either manually via Postman or headlessly using the comm
 2. Run Newman via npx for either project from the repository root:
 
 * Petstore Tests:
+  ```bash
   npx newman run ./petstore/petstore-collection.postman.json -e ./petstore/petstore-environment.postman.json --reporters cli,json
+  ```
 
 * Restful-Booker Tests:
+  ```bash
   npx newman run ./restful-broker/restful-collection.postman.json -e ./restful-broker/restful-environment.postman.json --reporters cli,json
+  ```
 
 ---
 
 ### Option B: Run Manually in Postman
 
 1. Open Postman.
-2. Click Import and drag/drop the collection and environment JSON files for the project you want to test (petstore/ or restful-broker/).
+2. Click Import and drag/drop the collection and environment JSON files for the project you want to test (`petstore/` or `restful-broker/`).
 3. Select the corresponding environment from the top-right environment dropdown.
 4. Open the Collection Runner, select the collection, and click Run.
